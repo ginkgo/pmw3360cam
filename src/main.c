@@ -29,6 +29,7 @@
 #include <math.h>
 
 #include "bsp/board_api.h"
+#include "pmw3360.h"
 #include "tusb.h"
 #include "usb_descriptors.h"
 
@@ -38,20 +39,6 @@
 // MACRO CONSTANT TYPEDEF PROTYPES
 //--------------------------------------------------------------------+
 
-/* Blink pattern
- * - 250 ms  : device not mounted
- * - 1000 ms : device mounted
- * - 2500 ms : device is suspended
- */
-enum {
-  BLINK_NOT_MOUNTED = 250,
-  BLINK_MOUNTED = 1000,
-  BLINK_SUSPENDED = 2500,
-};
-
-static uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
-
-void led_blinking_task(void* param);
 void usb_device_task(void *param);
 void video_task(void* param);
 
@@ -70,13 +57,14 @@ int main(void) {
   };
   tusb_init(BOARD_TUD_RHPORT, &dev_init);
 
+  pmw3360_init();
+  
   board_init_after_tusb();
 
   multicore_launch_core1(framebuffer_update_task);
 
   while (1) {
     tud_task(); // tinyusb device task
-    led_blinking_task(NULL);
     video_task(NULL);
   }
 }
@@ -87,12 +75,10 @@ int main(void) {
 
 // Invoked when device is mounted
 void tud_mount_cb(void) {
-  blink_interval_ms = BLINK_MOUNTED;
 }
 
 // Invoked when device is unmounted
 void tud_umount_cb(void) {
-  blink_interval_ms = BLINK_NOT_MOUNTED;
 }
 
 // Invoked when usb bus is suspended
@@ -100,12 +86,10 @@ void tud_umount_cb(void) {
 // Within 7ms, device must draw an average of current less than 2.5 mA from bus
 void tud_suspend_cb(bool remote_wakeup_en) {
   (void) remote_wakeup_en;
-  blink_interval_ms = BLINK_SUSPENDED;
 }
 
 // Invoked when usb bus is resumed
 void tud_resume_cb(void) {
-  blink_interval_ms = tud_mounted() ? BLINK_MOUNTED : BLINK_NOT_MOUNTED;
 }
 
 //--------------------------------------------------------------------+
@@ -116,18 +100,10 @@ void tud_resume_cb(void) {
 static uint8_t frame_buffer[FRAME_WIDTH * FRAME_HEIGHT];
 
 void framebuffer_update_task(void)
-{
+{	
 	while (1)
 	{
-		unsigned t = board_millis();
-
-		for (int y = 0; y < FRAME_HEIGHT; ++y)
-		{
-			for (int x = 0; x < FRAME_WIDTH; ++x)
-			{
-				frame_buffer[x + y * FRAME_WIDTH] = (uint8_t)(127.5 + 127.5 * sin(0.3*x + 0.25*y + t * 0.01));
-			}
-		}
+		pmw3360_frame_capture(frame_buffer);
 	}
 }
 
@@ -147,7 +123,7 @@ static void convert_frame_buffer(uint8_t* yuy2_buffer, unsigned frame_no) {
 	uint8_t* op = yuy2_buffer;
 	for (int i = 0; i < FRAME_WIDTH*FRAME_HEIGHT; ++i)
 	{
-		*(op++) = *(ip++); // Luma
+		*(op++) = *(ip++) * 2; // copy as luma
 		*(op++) = 128;     // neutral chroma
 	}
 }
@@ -212,23 +188,4 @@ int tud_video_commit_cb(uint_fast8_t ctl_idx, uint_fast8_t stm_idx,
   /* convert unit to ms from 100 ns */
   interval_ms = parameters->dwFrameInterval / 10000;
   return VIDEO_ERROR_NONE;
-}
-
-//--------------------------------------------------------------------+
-// Blinking Task
-//--------------------------------------------------------------------+
-void led_blinking_task(void* param) {
-  (void) param;
-  static uint32_t start_ms = 0;
-  static bool led_state = false;
-
-  while (1) {
-    if (board_millis() - start_ms < blink_interval_ms) {
-      return; // not enough time
-    }
-
-    start_ms += blink_interval_ms;
-    board_led_write(led_state);
-    led_state = 1 - led_state; // toggle
-  }
 }

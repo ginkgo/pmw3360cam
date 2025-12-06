@@ -18,6 +18,8 @@ add_executable(${PROJECT})
 # Example source
 target_sources(${PROJECT} PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/pmw3360.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/srom.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/usb_descriptors.c
 )
 
@@ -29,6 +31,7 @@ target_include_directories(${PROJECT} PUBLIC
 target_link_libraries(${PROJECT} PUBLIC
   pico_stdlib
   pico_multicore
+  hardware_spi
   hardware_dma
   hardware_i2c
   hardware_pio
