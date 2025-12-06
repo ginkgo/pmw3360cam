@@ -7,6 +7,24 @@ This can be useful to inspect properties of surfaces (for instance trackballs) t
 
 ## Compilation
 
+You need the RaspberryPi Pico SDK and CMake installed.
+
+Build using:
+
+```
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make -j8
+```
+
+This should build a `pmw3360cam.uf2` file in the `build` folder that can be uploaded to an `rp2040-pmw3360` board.
+Upon reboot it should show up as a USB camera device that can be opened with `ffplay` for instance.
+
+```
+$ ffplay /dev/video0
+```
+
 ## Examples
 
 Bumped up old trackball. Great surface tracking but too rough.
