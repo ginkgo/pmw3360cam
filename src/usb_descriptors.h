@@ -27,8 +27,8 @@
 #ifndef _USB_DESCRIPTORS_H_
 #define _USB_DESCRIPTORS_H_
 
-#define FRAME_WIDTH   128
-#define FRAME_HEIGHT  96
+#define FRAME_WIDTH   36
+#define FRAME_HEIGHT  36
 #define FRAME_RATE    10
 
 // NOTE: descriptor template is not used but leave here as reference
