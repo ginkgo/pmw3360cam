@@ -27,13 +27,13 @@ $ ffplay /dev/video0
 
 ## Examples
 
-Bumped up old trackball. Great surface tracking but too rough.
+Bumped up old billiards ball. Great surface tracking but too rough.
 ![bumped up trackball](img/img1.jpeg)
 
-New trackball. Very few surface features, tracks poorly.
+New billiards ball. Very few surface features, tracks poorly.
 ![bumped up trackball](img/img2.jpeg)
 
-Pearlized trackball. Seemingly more surface features but no good tracking.
+Pearlized billiards ball. Seemingly more surface features but no good tracking.
 ![bumped up trackball](img/img3.jpeg)
 
 ## License 
