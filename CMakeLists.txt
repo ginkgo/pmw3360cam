@@ -27,11 +27,12 @@ target_include_directories(${PROJECT} PUBLIC
 )
 
 target_link_libraries(${PROJECT} PUBLIC
-	pico_stdlib
-	hardware_dma
-	hardware_i2c
-	hardware_pio
-	hardware_pwm
+  pico_stdlib
+  pico_multicore
+  hardware_dma
+  hardware_i2c
+  hardware_pio
+  hardware_pwm
 )
 
 # disable usb output, enable uart output

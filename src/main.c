@@ -32,6 +32,8 @@
 #include "tusb.h"
 #include "usb_descriptors.h"
 
+#include "pico/multicore.h"
+
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF PROTYPES
 //--------------------------------------------------------------------+
@@ -53,6 +55,8 @@ void led_blinking_task(void* param);
 void usb_device_task(void *param);
 void video_task(void* param);
 
+void framebuffer_update_task(void);
+
 //--------------------------------------------------------------------+
 // Main
 //--------------------------------------------------------------------+
@@ -67,6 +71,8 @@ int main(void) {
   tusb_init(BOARD_TUD_RHPORT, &dev_init);
 
   board_init_after_tusb();
+
+  multicore_launch_core1(framebuffer_update_task);
 
   while (1) {
     tud_task(); // tinyusb device task
@@ -102,6 +108,28 @@ void tud_resume_cb(void) {
   blink_interval_ms = tud_mounted() ? BLINK_MOUNTED : BLINK_NOT_MOUNTED;
 }
 
+//--------------------------------------------------------------------+
+// Framebuffer background updates (on core 1)
+//--------------------------------------------------------------------+
+
+// grayscale frame buffer
+static uint8_t frame_buffer[FRAME_WIDTH * FRAME_HEIGHT];
+
+void framebuffer_update_task(void)
+{
+	while (1)
+	{
+		unsigned t = board_millis();
+
+		for (int y = 0; y < FRAME_HEIGHT; ++y)
+		{
+			for (int x = 0; x < FRAME_WIDTH; ++x)
+			{
+				frame_buffer[x + y * FRAME_WIDTH] = (uint8_t)(127.5 + 127.5 * sin(0.3*x + 0.25*y + t * 0.01));
+			}
+		}
+	}
+}
 
 //--------------------------------------------------------------------+
 // USB Video
@@ -114,19 +142,7 @@ static unsigned interval_ms = 1000 / FRAME_RATE;
 // YUY2 frame buffer
 static uint8_t yuy2_frame_buffer[FRAME_WIDTH * FRAME_HEIGHT * 16 / 8];
 
-// grayscale frame buffer
-static uint8_t frame_buffer[FRAME_WIDTH * FRAME_HEIGHT];
-
 static void convert_frame_buffer(uint8_t* yuy2_buffer, unsigned frame_no) {
-	
-	for (int y = 0; y < FRAME_HEIGHT; ++y)
-	{
-		for (int x = 0; x < FRAME_WIDTH; ++x)
-		{
-			frame_buffer[x + y * FRAME_WIDTH] = (uint8_t)(127.5 + 127.5 * sin(0.3*x + 0.25*y + frame_no));
-		}
-	}
-
 	uint8_t* ip = frame_buffer;
 	uint8_t* op = yuy2_buffer;
 	for (int i = 0; i < FRAME_WIDTH*FRAME_HEIGHT; ++i)
