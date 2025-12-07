@@ -40,5 +40,5 @@ Pearlized billiards ball. Seemingly more surface features but no good tracking.
 
 This project is MIT licensed.
 
-It has together with code samples from Ha Thach (tinyusb) and Jacek Fedryński (jfedor2).
+It was put together with code samples from Ha Thach (tinyusb) and Jacek Fedryński (jfedor2).
 Everything else is copyright 2025 Thomas Weber.
